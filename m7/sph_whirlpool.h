@@ -54,156 +54,93 @@
 #if SPH_64
 
 /**
- * Output size (in bits) for WHIRLPOOL.
+ * Output size (in bits) for WHIRLPOOL and its variants.
  */
 #define SPH_SIZE_whirlpool   512
-
-/**
- * Output size (in bits) for WHIRLPOOL-0.
- */
 #define SPH_SIZE_whirlpool0   512
-
-/**
- * Output size (in bits) for WHIRLPOOL-1.
- */
 #define SPH_SIZE_whirlpool1   512
 
 /**
- * This structure is a context for WHIRLPOOL computations: it contains the
- * intermediate values and some data from the last entered block. Once
- * a WHIRLPOOL computation has been performed, the context can be reused for
- * another computation.
- *
- * The contents of this structure are private. A running WHIRLPOOL computation
- * can be cloned by copying the context (e.g. with a simple
- * <code>memcpy()</code>).
+ * This structure is a context for WHIRLPOOL computations, containing
+ * intermediate values and data from the last entered block. The context
+ * can be reused for additional computations.
  */
 typedef struct {
-#ifndef DOXYGEN_IGNORE
-	unsigned char buf[64];    /* first field, for alignment */
-	sph_u64 state[8];
+    unsigned char buf[64];    /*Buffer for input data*/
+    sph_u64 state[8];        /*State variables*/
 #if SPH_64
-	sph_u64 count;
+    sph_u64 count;           /*Bit count*/
 #else
-	sph_u32 count_high, count_low;
-#endif
+    sph_u32 count_high, count_low; /*Bit count (split)*/
 #endif
 } sph_whirlpool_context;
 
 /**
  * Initialize a WHIRLPOOL context. This process performs no memory allocation.
  *
- * @param cc   the WHIRLPOOL context (pointer to a
- *             <code>sph_whirlpool_context</code>)
+ * @param cc   Pointer to a <code>sph_whirlpool_context</code>
  */
-void sph_whirlpool_init(void *cc);
+static inline void sph_whirlpool_init(void *cc) {
+    sph_whirlpool_context *ctx = (sph_whirlpool_context*)cc;
+    memset(ctx, 0, sizeof(sph_whirlpool_context));  // Clear context
+}
 
 /**
- * Process some data bytes. It is acceptable that <code>len</code> is zero
- * (in which case this function does nothing). This function applies the
- * plain WHIRLPOOL algorithm.
+ * Process data bytes. If <code>len</code> is zero, this function does nothing.
  *
- * @param cc     the WHIRLPOOL context
- * @param data   the input data
- * @param len    the input data length (in bytes)
+ * @param cc     Pointer to the WHIRLPOOL context
+ * @param data   Input data
+ * @param len    Input data length (in bytes)
  */
-void sph_whirlpool(void *cc, const void *data, size_t len);
+void sph_whirlpool(void *cc, const void*data, size_t len);
 
 /**
  * Terminate the current WHIRLPOOL computation and output the result into the
- * provided buffer. The destination buffer must be wide enough to
- * accomodate the result (64 bytes). The context is automatically
- * reinitialized.
+ * provided buffer. The destination buffer must accommodate the result (64 bytes).
+ * The context is automatically reinitialized.
  *
- * @param cc    the WHIRLPOOL context
- * @param dst   the destination buffer
+ * @param cc    Pointer to the WHIRLPOOL context
+ * @param dst   Destination buffer
  */
-void sph_whirlpool_close(void *cc, void *dst);
+void sph_whirlpool_close(void *cc, void*dst);
 
-/**
- * WHIRLPOOL-0 uses the same structure than plain WHIRLPOOL.
- */
+/
+
+*Define WHIRLPOOL-0 and WHIRLPOOL-1 contexts using the same structure*
+
+/
 typedef sph_whirlpool_context sph_whirlpool0_context;
-
-#ifdef DOXYGEN_IGNORE
-/**
- * Initialize a WHIRLPOOL-0 context. This function is identical to
- * <code>sph_whirlpool_init()</code>.
- *
- * @param cc   the WHIRLPOOL context (pointer to a
- *             <code>sph_whirlpool0_context</code>)
- */
-void sph_whirlpool0_init(void *cc);
-#endif
-
-#ifndef DOXYGEN_IGNORE
-#define sph_whirlpool0_init   sph_whirlpool_init
-#endif
+typedef sph_whirlpool_context sph_whirlpool1_context;
 
 /**
- * Process some data bytes. It is acceptable that <code>len</code> is zero
- * (in which case this function does nothing). This function applies the
- * WHIRLPOOL-0 algorithm.
+ * Initialize a WHIRLPOOL-0 context. Identical to <code>sph_whirlpool_init()</code>.
  *
- * @param cc     the WHIRLPOOL context
- * @param data   the input data
- * @param len    the input data length (in bytes)
+ * @param cc   Pointer to a <code>sph_whirlpool0_context</code>
  */
-void sph_whirlpool0(void *cc, const void *data, size_t len);
+static inline void sph_whirlpool0_init(void *cc) {
+    sph_whirlpool_init(cc);
+}
+
+/**
+ * Process data bytes for WHIRLPOOL-0. If <code>len</code> is zero, this function does nothing.
+ *
+ * @param cc     Pointer to the WHIRLPOOL-0 context
+ * @param data   Input data
+ * @param len    Input data length (in bytes)
+ */
+void sph_whirlpool0(void *cc, const void*data, size_t len);
 
 /**
  * Terminate the current WHIRLPOOL-0 computation and output the result into the
- * provided buffer. The destination buffer must be wide enough to
- * accomodate the result (64 bytes). The context is automatically
- * reinitialized.
+ * provided buffer. The context is automatically reinitialized.
  *
- * @param cc    the WHIRLPOOL-0 context
- * @param dst   the destination buffer
+ * @param cc    Pointer to the WHIRLPOOL-0 context
+ * @param dst   Destination buffer
  */
-void sph_whirlpool0_close(void *cc, void *dst);
+void sph_whirlpool0_close(void *cc, void*dst);
 
 /**
- * WHIRLPOOL-1 uses the same structure than plain WHIRLPOOL.
- */
-typedef sph_whirlpool_context sph_whirlpool1_context;
-
-#ifdef DOXYGEN_IGNORE
-/**
- * Initialize a WHIRLPOOL-1 context. This function is identical to
- * <code>sph_whirlpool_init()</code>.
+ * Initialize a WHIRLPOOL-1 context. Identical to <code>sph_whirlpool_init()</code>.
  *
- * @param cc   the WHIRLPOOL context (pointer to a
- *             <code>sph_whirlpool1_context</code>)
+ * @param cc   Pointer to a <code>sph_whirlpool1_context</code>
  */
-void sph_whirlpool1_init(void *cc);
-#endif
-
-#ifndef DOXYGEN_IGNORE
-#define sph_whirlpool1_init   sph_whirlpool_init
-#endif
-
-/**
- * Process some data bytes. It is acceptable that <code>len</code> is zero
- * (in which case this function does nothing). This function applies the
- * WHIRLPOOL-1 algorithm.
- *
- * @param cc     the WHIRLPOOL context
- * @param data   the input data
- * @param len    the input data length (in bytes)
- */
-void sph_whirlpool1(void *cc, const void *data, size_t len);
-
-/**
- * Terminate the current WHIRLPOOL-1 computation and output the result into the
- * provided buffer. The destination buffer must be wide enough to
- * accomodate the result (64 bytes). The context is automatically
- * reinitialized.
- *
- * @param cc    the WHIRLPOOL-1 context
- * @param dst   the destination buffer
- */
-void sph_whirlpool1_close(void *cc, void *dst);
-
-#endif
-
-#endif
